@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  client:
+    image: asia.gcr.io/green-gasket-411107/pagebook_client:1.1.14
+    container_name: pagebook_client
+    restart: unless-stopped
+    depends_on:
+      - server
+
+  server:
+    image: asia.gcr.io/green-gasket-411107/pagebook_server:1.1.14
+    container_name: pagebook_server
+    restart: unless-stopped
+    env_file: ./server/.env
+    depends_on:
+      - database
+    stdin_open: true
+    tty: true
+
+  database:
+    image: postgres:16.1-alpine3.19
+    container_name: pagebook_database
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rootpagebook
+      POSTGRES_PASSWORD: ccf7393f54faa8b6b00
+      POSTGRES_DB: pagebook
+
+  nginx:
+    image: nginx:1-alpine
+    volumes:
+      - ./nginx/:/etc/nginx:ro
+      - ./logs/nginx/:/var/log/nginx
+    depends_on:
+      - client
+      - server
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped

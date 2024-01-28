@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["linux-musl-openssl-3.0.x", "windows"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(uuid())
+  username   String      @unique
+  passwort   String
+  avatar     Avatar?
+  background Background?
+  post       Post[]
+  liked      Like[]
+  comment    Comment[]
+  follower   Follower[]
+  following  Following[]
+  createdAt  DateTime    @default(now())
+}
+
+model Avatar {
+  id     Int    @id @default(autoincrement())
+  userId String @unique
+  url    String
+
+  User User @relation(fields: [userId], references: [id])
+}
+
+model Background {
+  id     Int    @id @default(autoincrement())
+  userId String @unique
+  url    String
+
+  User User @relation(fields: [userId], references: [id])
+}
+
+model Follower {
+  id     String @id @default(uuid())
+  userId String
+  toId   String @unique
+
+  User              User              @relation(fields: [userId], references: [id])
+  FollowerFollowing FollowerFollowing @relation(fields: [toId], references: [id])
+}
+
+model Following {
+  id     String @id @default(uuid())
+  userId String
+  toId   String @unique
+
+  User User @relation(fields: [userId], references: [id])
+  FollowerFollowing FollowerFollowing @relation(fields: [toId], references: [id])
+}
+
+model FollowerFollowing {
+  id          String     @id @default(uuid())
+  followerId  Follower?
+  followingId Following?
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  on          String    @default("public")
+  like        Int       @default(0)
+  likeBy      Like[]
+  image       Image[]
+  comment     Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  User User @relation(fields: [userId], references: [id])
+}
+
+model Image {
+  id     Int    @id @default(autoincrement())
+  postId String
+  url    String
+
+  Post Post @relation(fields: [postId], references: [id])
+}
+
+model Comment {
+  id      Int    @id @default(autoincrement())
+  postId  String
+  userId  String
+  message String
+
+  Post Post @relation(fields: [postId], references: [id])
+  User User @relation(fields: [userId], references: [id])
+}
+
+model Like {
+  id     Int    @id @default(autoincrement())
+  postId String
+  userId String
+
+  Post Post @relation(fields: [postId], references: [id])
+  User User @relation(fields: [userId], references: [id])
+}
